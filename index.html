@@ -1,0 +1,87 @@
+'use client'
+
+import { useState } from 'react'
+import { Search } from 'lucide-react'
+
+export default function YouTubeDownloader() {
+  const [url, setUrl] = useState('')
+  const [videoInfo, setVideoInfo] = useState(null)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setVideoInfo(null)
+
+    try {
+      const response = await fetch(`https://youtube-v31.p.rapidapi.com/videos?part=contentDetails%2Csnippet%2Cstatistics&id=${getVideoId(url)}`, {
+        method: 'GET',
+        headers: {
+          'x-rapidapi-host': 'youtube-v31.p.rapidapi.com',
+          'x-rapidapi-key': 'd1c53133acmsh2e7c470c0bfbb2ep1a074cjsne9dd522da151'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch video information')
+      }
+
+      const data = await response.json()
+      if (data.items && data.items.length > 0) {
+        setVideoInfo(data.items[0])
+      } else {
+        setError('No video information found')
+      }
+    } catch (err) {
+      setError('Error fetching video information')
+      console.error(err)
+    }
+  }
+
+  const getVideoId = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
+    const match = url.match(regExp)
+    return (match && match[2].length === 11) ? match[2] : null
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-4xl font-bold text-center mb-4">YouTube Video Downloader</h1>
+      <p className="text-center text-gray-600 mb-8">download online videos, download online video to mp3 for free</p>
+      
+      <form onSubmit={handleSubmit} className="mb-8">
+        <div className="flex">
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="Search keywords or paste video link here"
+            className="flex-grow p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button type="submit" className="bg-blue-500 text-white p-3 rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <Search className="w-6 h-6" />
+          </button>
+        </div>
+      </form>
+
+      {error && <p className="text-red-500 text-center">{error}</p>}
+
+      {videoInfo && (
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <h2 className="text-2xl font-bold mb-4">{videoInfo.snippet.title}</h2>
+          <img src={videoInfo.snippet.thumbnails.high.url} alt={videoInfo.snippet.title} className="w-full mb-4 rounded-lg" />
+          <p className="mb-2"><strong>Views:</strong> {videoInfo.statistics.viewCount}</p>
+          <p className="mb-2"><strong>Likes:</strong> {videoInfo.statistics.likeCount}</p>
+          <p className="mb-4"><strong>Description:</strong> {videoInfo.snippet.description}</p>
+          <button className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">
+            Download Video
+          </button>
+        </div>
+      )}
+
+      <p className="mt-8 text-center text-gray-600">
+        YouTube is the biggest YouTube video sharing platform in the world, and provide an excellent experience for users to upload, view, and share videos. What it can't provide is a YouTube video download. That is why yt1d is here to help you out!
+      </p>
+    </div>
+  )
+}
